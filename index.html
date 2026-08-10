@@ -4,30 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Hábitos & Tareas</title>
-
-    <!-- Archivo Manifest para Notificaciones en iOS -->
-    <link rel="manifest" href="./manifest.json">
-
     
+    <link rel="manifest" href="./manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
 
     <!-- SDK Oficial de OneSignal -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "18eed79f-f719-4151-97e3-66625d1c74ec",
-      serviceWorkerParam: { scope: "/App-habitos/" },
-      serviceWorkerPath: "App-habitos/OneSignalSDKWorker.js",
-      notifyButton: {
-        enable: false,
-      },
-    });
-  });
-</script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "18eed79f-f719-4151-97e3-66625d1c74ec",
+          serviceWorkerParam: { scope: "/App-habitos/" },
+          serviceWorkerPath: "App-habitos/OneSignalSDKWorker.js",
+          notifyButton: { enable: false },
+        });
+      });
+    </script>
 
     <style>
         :root {
@@ -91,7 +86,6 @@
         .task-card.completed .task-title { text-decoration: line-through; }
         .task-card.completed .checkbox-btn { background: var(--success); border-color: var(--success); color: white; }
 
-        /* Modal */
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: flex-end; z-index: 1000; }
         .modal.active { display: flex; }
         .modal-body { background: var(--card-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 24px; width: 100%; max-width: 500px; border-top: 1px solid var(--card-border); }
@@ -99,8 +93,6 @@
         label { display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--bg-color); color: var(--text-main); font-size: 1em; }
         .btn-submit { width: 100%; padding: 14px; background: var(--primary); border: none; color: white; border-radius: 10px; font-weight: 700; font-size: 1em; margin-top: 10px; cursor: pointer; }
-
-        .notif-box { background: #312e81; padding: 12px; border-radius: 12px; font-size: 0.85em; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
@@ -117,11 +109,6 @@
     </header>
 
     <div class="container">
-        <div id="notif-btn" class="notif-box">
-            <span>Activar Avisos Push en iPhone</span>
-            <button onclick="requestPushPermission()" style="background:#4f46e5; border:none; color:white; padding:6px 10px; border-radius:6px; cursor:pointer;">Activar</button>
-        </div>
-
         <h2>
             Mis Tareas & Hábitos
             <button class="btn-add" onclick="openModal()">+ Nuevo</button>
@@ -170,23 +157,12 @@
     <script>
         const todayStr = new Date().toISOString().split('T')[0];
 
-        let state = JSON.parse(localStorage.getItem('habit_app_v4')) || {
-            items: [
-                { id: 1, type: 'habit', title: 'Lavarse los dientes (Comida)', time: '14:30', date: '', completed: false },
-                { id: 2, type: 'single', title: 'Matrícula Universidad', time: '10:00', date: '2026-08-15', completed: false }
-            ],
+        let state = JSON.parse(localStorage.getItem('habit_app_v5')) || {
+            items: [],
             lastDate: todayStr,
             streak: 0, 
             xp: 0
         };
-
-        function requestPushPermission() {
-            window.OneSignalDeferred.push(function(OneSignal) {
-                OneSignal.Notifications.requestPermission().then(() => {
-                    document.getElementById('notif-btn').style.display = 'none';
-                });
-            });
-        }
 
         function checkDailyReset() {
             const currentToday = new Date().toISOString().split('T')[0];
@@ -200,7 +176,7 @@
         }
 
         function save() {
-            localStorage.setItem('habit_app_v4', JSON.stringify(state));
+            localStorage.setItem('habit_app_v5', JSON.stringify(state));
             render();
         }
 
@@ -228,6 +204,40 @@
             }
         }
 
+        // Función para programar la alerta en la nube de OneSignal
+        async function schedulePushNotification(title, timeStr, dateStr) {
+            const now = new Date();
+            let targetDate = dateStr ? new Date(dateStr) : new Date();
+            
+            const [hours, minutes] = timeStr.split(':');
+            targetDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+            // Si la hora elegida ya pasó hoy para un hábito diario, lo programa para mañana
+            if (targetDate < now && !dateStr) {
+                targetDate.setDate(targetDate.getDate() + 1);
+            }
+
+            window.OneSignalDeferred.push(function(OneSignal) {
+                OneSignal.User.PushSubscription.id.then(subscriptionId => {
+                    if (!subscriptionId) return;
+
+                    // Envío del aviso a la API de OneSignal
+                    fetch("https://onesignal.com/api/v1/notifications", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json; charset=utf-8"
+                        },
+                        body: JSON.stringify({
+                            app_id: "18eed79f-f719-4151-97e3-66625d1c74ec",
+                            include_player_ids: [subscriptionId],
+                            contents: { es: "⏰ Recordatorio: " + title, en: "⏰ Reminder: " + title },
+                            send_after: targetDate.toISOString()
+                        })
+                    }).catch(err => console.log("Error al programar notificación:", err));
+                });
+            });
+        }
+
         function saveTask() {
             const title = document.getElementById('task-title').value.trim();
             const type = document.getElementById('type-select').value;
@@ -237,6 +247,10 @@
             if (!title) return alert('Introduce un nombre');
 
             state.items.push({ id: Date.now(), type, title, time, date, completed: false });
+            
+            // Programar el aviso Push
+            schedulePushNotification(title, time, date);
+
             closeModal();
             save();
         }
