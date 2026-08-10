@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Habit & Task Tracker</title>
+    <title>Hábitos & Tareas</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#121212">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/emoji/192/sparkles-emoji.png">
+    <meta name="theme-color" content="#0f172a">
     <style>
         :root {
             --bg-color: #0f172a;
@@ -19,630 +18,247 @@
             --primary-light: #818cf8;
             --accent: #f59e0b;
             --success: #10b981;
-            --danger: #ef4444;
             --radius: 16px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 90px; max-width: 500px; margin: 0 auto; min-height: 100vh; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding-bottom: 90px;
-            max-width: 500px;
-            margin: 0 auto;
-            min-height: 100vh;
-        }
-
-        /* Top Header / Stats Bar */
         header {
             background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--card-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: sticky; top: 0; z-index: 100;
+            padding: 16px 20px; border-bottom: 1px solid var(--card-border);
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .user-stats {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
+        .stat-badge { background: #0f172a; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.9em; border: 1px solid var(--card-border); }
+        .container { padding: 20px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .stat-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #0f172a;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.9em;
-            border: 1px solid var(--card-border);
-        }
+        h2 { font-size: 1.2em; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 0.85em; cursor: pointer; }
 
-        .stat-badge.streak { color: #f97316; }
-        .stat-badge.xp { color: #38bdf8; }
+        .section-title { font-size: 0.9em; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin: 16px 0 8px 0; }
 
-        .level-progress {
-            margin-top: 4px;
-            height: 4px;
-            background: #334155;
-            border-radius: 2px;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .level-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--primary-light));
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        /* Container & Tabs */
-        .container {
-            padding: 20px;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        h2 {
-            font-size: 1.3em;
-            margin-bottom: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .btn-add {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.85em;
-            cursor: pointer;
-        }
-
-        /* Task Cards */
         .task-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: transform 0.1s ease;
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
         }
 
-        .task-info {
-            flex: 1;
-        }
-
-        .task-title {
-            font-weight: 600;
-            font-size: 1.05em;
-            margin-bottom: 4px;
-        }
-
-        .task-meta {
-            font-size: 0.8em;
-            color: var(--text-muted);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .time-tag {
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--primary-light);
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
+        .task-title { font-weight: 600; font-size: 1em; margin-bottom: 4px; }
+        .task-meta { font-size: 0.8em; color: var(--text-muted); display: flex; gap: 8px; align-items: center; }
+        .tag { background: rgba(99, 102, 241, 0.2); color: var(--primary-light); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .tag-date { background: rgba(245, 158, 11, 0.2); color: var(--accent); }
 
         .checkbox-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid var(--card-border);
-            background: transparent;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: transparent;
-            font-size: 1.2em;
-            transition: all 0.2s ease;
-            margin-left: 12px;
+            width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--card-border);
+            background: transparent; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; color: transparent; font-size: 1em; transition: all 0.2s;
         }
 
-        .task-card.completed {
-            opacity: 0.6;
-        }
+        .task-card.completed { opacity: 0.5; }
+        .task-card.completed .task-title { text-decoration: line-through; }
+        .task-card.completed .checkbox-btn { background: var(--success); border-color: var(--success); color: white; }
 
-        .task-card.completed .task-title {
-            text-decoration: line-through;
-        }
-
-        .task-card.completed .checkbox-btn {
-            background: var(--success);
-            border-color: var(--success);
-            color: white;
-        }
-
-        /* Modals / Forms */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(5px);
-            display: none;
-            justify-content: center;
-            align-items: flex-end;
-            z-index: 1000;
-        }
-
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: flex-end; z-index: 1000; }
         .modal.active { display: flex; }
+        .modal-body { background: var(--card-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 24px; width: 100%; max-width: 500px; border-top: 1px solid var(--card-border); }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 6px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--bg-color); color: var(--text-main); font-size: 1em; }
+        .btn-submit { width: 100%; padding: 14px; background: var(--primary); border: none; color: white; border-radius: 10px; font-weight: 700; font-size: 1em; margin-top: 10px; cursor: pointer; }
 
-        .modal-body {
-            background: var(--card-bg);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding: 24px;
-            width: 100%;
-            max-width: 500px;
-            border-top: 1px solid var(--card-border);
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.85em;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid var(--card-border);
-            background: var(--bg-color);
-            color: var(--text-main);
-            font-size: 1em;
-            outline: none;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            border: none;
-            color: white;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 1em;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        /* Rewards & Stats */
-        .reward-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .reward-cost {
-            color: var(--accent);
-            font-weight: 700;
-        }
-
-        /* Bottom Nav */
-        nav {
-            position: fixed;
-            bottom: 0;
-            left: 0; right: 0;
-            max-width: 500px;
-            margin: 0 auto;
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(16px);
-            border-top: 1px solid var(--card-border);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 24px 0;
-        }
-
-        .nav-item {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.75em;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-        }
-
-        .nav-item.active {
-            color: var(--primary-light);
-        }
-
-        .nav-item svg {
-            width: 22px;
-            height: 22px;
-            fill: currentColor;
-        }
-
-        .permission-banner {
-            background: #312e81;
-            color: #c7d2fe;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .permission-banner button {
-            background: #4f46e5;
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            cursor: pointer;
-        }
+        nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(16px); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; padding: 12px 0 24px 0; }
+        .nav-item { background: none; border: none; color: var(--text-muted); font-size: 0.75em; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-item.active { color: var(--primary-light); }
+        .notif-box { background: #312e81; padding: 12px; border-radius: 12px; font-size: 0.85em; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
-    <!-- Header Stats -->
     <header>
         <div>
-            <div style="font-size: 0.8em; color: var(--text-muted);">Progreso de Hoy</div>
-            <div style="font-weight: 700;" id="today-percentage">0% Completado</div>
+            <div style="font-size: 0.75em; color: var(--text-muted);">Estado</div>
+            <div style="font-weight: 700;" id="today-pct">0% Completado</div>
         </div>
-        <div class="user-stats">
-            <div class="stat-badge streak">
-                🔥 <span id="streak-count">0</span>
-            </div>
-            <div class="stat-badge xp">
-                ⚡ <span id="xp-count">0</span> XP
-            </div>
+        <div style="display:flex; gap:10px;">
+            <div class="stat-badge" style="color:#f97316;">🔥 <span id="streak">0</span></div>
+            <div class="stat-badge" style="color:#38bdf8;">⚡ <span id="xp">0</span> XP</div>
         </div>
     </header>
 
     <div class="container">
-        <!-- Banner para Notificaciones -->
-        <div id="notif-banner" class="permission-banner" style="display:none;">
-            <span>Activa las notificaciones para avisos de hábitos</span>
-            <button onclick="requestNotificationPermission()">Activar</button>
+        <div id="notif-btn" class="notif-box">
+            <span>Permitir notificaciones de iOS</span>
+            <button onclick="enableNotifications()" style="background:#4f46e5; border:none; color:white; padding:6px 10px; border-radius:6px;">Activar</button>
         </div>
 
-        <!-- TAB: HÁBITOS & TAREAS -->
         <div id="tab-tasks" class="tab-content active">
             <h2>
-                Mis Hábitos Diarios
-                <button class="btn-add" onclick="openModal('modal-task')">+ Nuevo</button>
+                Mis Tareas & Hábitos
+                <button class="btn-add" onclick="openModal()">+ Nuevo</button>
             </h2>
-            <div id="tasks-list">
-                <!-- Se rellena dinámicamente -->
-            </div>
-        </div>
 
-        <!-- TAB: ESTADÍSTICAS -->
-        <div id="tab-stats" class="tab-content">
-            <h2>Rachas & Métricas</h2>
-            <div class="task-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-                <div style="font-weight: 600;">Resumen General</div>
-                <div style="font-size: 0.9em; color: var(--text-muted);">
-                    Racha Actual: <b style="color:var(--accent)" id="stat-streak">0 días</b><br>
-                    Total Tareas Cumplidas: <b id="stat-completed-total">0</b><br>
-                    Nivel de Disciplina: <b style="color:var(--primary-light)" id="stat-level">Nivel 1</b>
-                </div>
-            </div>
-        </div>
+            <div class="section-title">🔄 Hábitos Diarios</div>
+            <div id="habits-list"></div>
 
-        <!-- TAB: RECOMPENSAS -->
-        <div id="tab-rewards" class="tab-content">
-            <h2>
-                Recompensas
-                <button class="btn-add" onclick="openModal('modal-reward')">+ Añadir</button>
-            </h2>
-            <div id="rewards-list">
-                <!-- Se rellena dinámicamente -->
-            </div>
+            <div class="section-title" style="margin-top:24px;">📅 Eventos Puntuales</div>
+            <div id="single-list"></div>
         </div>
     </div>
 
-    <!-- Modal Añadir Tarea -->
+    <!-- Modal Form -->
     <div id="modal-task" class="modal">
         <div class="modal-body">
-            <h3>Nueva Tarea o Hábitos</h3>
-            <div class="form-group" style="margin-top:14px;">
-                <label>Nombre del hábito / tarea</label>
-                <input type="text" id="task-title" placeholder="Ej. Lavarse los dientes">
-            </div>
+            <h3 style="margin-bottom:12px;">Crear Recordatorio</h3>
+            
             <div class="form-group">
-                <label>Hora de notificación principal</label>
-                <input type="time" id="task-time" value="14:00">
-            </div>
-            <div class="form-group">
-                <label>Notificación insistente (Modo Pesado)</label>
-                <select id="task-interval">
-                    <option value="0">Solo un aviso puntual</option>
-                    <option value="15">Repetir cada 15 min si no se cumple</option>
-                    <option value="30" selected>Repetir cada 30 min si no se cumple</option>
-                    <option value="60">Repetir cada hora si no se cumple</option>
+                <label>Tipo de Recordatorio</label>
+                <select id="type-select" onchange="toggleType()">
+                    <option value="habit">Hábito Diario (Ej. Dientes)</option>
+                    <option value="single">Fecha Única (Ej. Matrícula Univ.)</option>
                 </select>
             </div>
-            <button class="btn-submit" onclick="saveTask()">Guardar Tarea</button>
-            <button class="btn-submit" style="background:transparent; border:1px solid var(--card-border); margin-top:8px;" onclick="closeModal('modal-task')">Cancelar</button>
-        </div>
-    </div>
 
-    <!-- Modal Añadir Recompensa -->
-    <div id="modal-reward" class="modal">
-        <div class="modal-body">
-            <h3>Nueva Recompensa</h3>
-            <div class="form-group" style="margin-top:14px;">
-                <label>Premio / Capricho</label>
-                <input type="text" id="reward-title" placeholder="Ej. Ver 1 cap de mi serie">
-            </div>
             <div class="form-group">
-                <label>Coste en XP</label>
-                <input type="number" id="reward-cost" placeholder="100" value="100">
+                <label>Título</label>
+                <input type="text" id="task-title" placeholder="Escribe aquí...">
             </div>
-            <button class="btn-submit" onclick="saveReward()">Guardar Recompensa</button>
-            <button class="btn-submit" style="background:transparent; border:1px solid var(--card-border); margin-top:8px;" onclick="closeModal('modal-reward')">Cancelar</button>
+
+            <div class="form-group" id="date-group" style="display:none;">
+                <label>Fecha de la cita</label>
+                <input type="date" id="task-date">
+            </div>
+
+            <div class="form-group">
+                <label>Hora de la notificación</label>
+                <input type="time" id="task-time" value="14:00">
+            </div>
+
+            <div class="form-group">
+                <label>Aviso Insistente</label>
+                <select id="task-interval">
+                    <option value="0">Un solo aviso</option>
+                    <option value="15">Avisar cada 15 min hasta completar</option>
+                    <option value="30">Avisar cada 30 min hasta completar</option>
+                </select>
+            </div>
+
+            <button class="btn-submit" onclick="saveTask()">Guardar</button>
+            <button class="btn-submit" style="background:transparent; border:1px solid var(--card-border); margin-top:6px;" onclick="closeModal()">Cancelar</button>
         </div>
     </div>
-
-    <!-- Bottom Navigation -->
-    <nav>
-        <button class="nav-item active" onclick="switchTab('tasks', this)">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            Hábitos
-        </button>
-        <button class="nav-item" onclick="switchTab('stats', this)">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
-            Métricas
-        </button>
-        <button class="nav-item" onclick="switchTab('rewards', this)">
-            <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-            Premios
-        </button>
-    </nav>
 
     <script>
-        // State
-        let state = JSON.parse(localStorage.getItem('habit_app_state')) || {
-            tasks: [
-                { id: 1, title: 'Lavarse los dientes (Comida)', time: '14:30', interval: 15, completed: false, lastDone: null },
-                { id: 2, title: 'Lavarse los dientes (Cena)', time: '22:30', interval: 15, completed: false, lastDone: null }
+        let state = JSON.parse(localStorage.getItem('habit_app_v2')) || {
+            items: [
+                { id: 1, type: 'habit', title: 'Lavarse los dientes', time: '14:00', date: '', interval: 15, completed: false },
+                { id: 2, type: 'single', title: 'Matrícula Universidad', time: '10:00', date: '2026-08-15', interval: 30, completed: false }
             ],
-            rewards: [
-                { id: 1, title: 'Noche de Película / Serie', cost: 150 },
-                { id: 2, title: 'Comprar capricho pequeño', cost: 300 }
-            ],
-            streak: 0,
-            xp: 50,
-            lastStreakDate: null,
-            totalCompleted: 0
+            streak: 0, xp: 0
         };
 
-        function saveState() {
-            localStorage.setItem('habit_app_state', JSON.stringify(state));
+        function save() {
+            localStorage.setItem('habit_app_v2', JSON.stringify(state));
             render();
         }
 
-        // Notification Engine
-        if ('Notification' in window) {
-            if (Notification.permission === 'default') {
-                document.getElementById('notif-banner').style.display = 'flex';
+        function toggleType() {
+            const type = document.getElementById('type-select').value;
+            document.getElementById('date-group').style.display = type === 'single' ? 'block' : 'none';
+        }
+
+        function openModal() { document.getElementById('modal-task').classList.add('active'); }
+        function closeModal() { document.getElementById('modal-task').classList.remove('active'); }
+
+        function enableNotifications() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(perm => {
+                    if (perm === 'granted') {
+                        document.getElementById('notif-btn').style.display = 'none';
+                        new Notification("✅ Notificaciones activadas en tu iPhone");
+                    }
+                });
             }
         }
 
-        function requestNotificationPermission() {
-            Notification.requestPermission().then(perm => {
-                if (perm === 'granted') {
-                    document.getElementById('notif-banner').style.display = 'none';
-                    new Notification('¡Notificaciones Activadas!', { body: 'Te avisaremos cuando sea el momento de tus hábitos.' });
-                }
-            });
-        }
-
-        // Check Background Scheduler every 1 minute
+        // Motor de comprobación por minuto
         setInterval(() => {
             const now = new Date();
-            const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            
-            state.tasks.forEach(task => {
-                if (!task.completed && task.time === currentTime) {
-                    sendNotification(task.title, "Es hora de cumplir con tu hábito.");
+            const curTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            const curDate = now.toISOString().split('T')[0];
+
+            state.items.forEach(item => {
+                if (!item.completed) {
+                    if (item.type === 'habit' && item.time === curTime) {
+                        triggerNotif(item.title);
+                    } else if (item.type === 'single' && item.date === curDate && item.time === curTime) {
+                        triggerNotif(item.title);
+                    }
                 }
             });
-        }, 60000);
+        }, 10000);
 
-        function sendNotification(title, body) {
+        function triggerNotif(title) {
             if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(title, { body: body, icon: 'https://img.icons8.com/emoji/192/sparkles-emoji.png' });
+                new Notification("⏰ ¡Recordatorio!", { body: title, requireInteraction: true });
             }
         }
 
-        // Tab Switcher
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            el.classList.add('active');
-        }
-
-        // Modals
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        // Actions
-        function toggleTask(id) {
-            const task = state.tasks.find(t => t.id === id);
-            if (task) {
-                task.completed = !task.completed;
-                if (task.completed) {
-                    state.xp += 20;
-                    state.totalCompleted += 1;
-                    checkStreakUpdate();
-                } else {
-                    state.xp = Math.max(0, state.xp - 20);
-                    state.totalCompleted = Math.max(0, state.totalCompleted - 1);
-                }
-                saveState();
-            }
-        }
-
-        function checkStreakUpdate() {
-            const today = new Date().toISOString().split('T')[0];
-            const allCompleted = state.tasks.every(t => t.completed);
-            
-            if (allCompleted && state.lastStreakDate !== today) {
-                state.streak += 1;
-                state.lastStreakDate = today;
-                alert('🔥 ¡Has completado todos tus hábitos de hoy! Racha aumentada.');
+        function toggleCheck(id) {
+            const item = state.items.find(i => i.id === id);
+            if (item) {
+                item.completed = !item.completed;
+                state.xp += item.completed ? 25 : -25;
+                save();
             }
         }
 
         function saveTask() {
             const title = document.getElementById('task-title').value.trim();
+            const type = document.getElementById('type-select').value;
             const time = document.getElementById('task-time').value;
+            const date = document.getElementById('task-date').value;
             const interval = parseInt(document.getElementById('task-interval').value);
 
-            if (!title) return alert('Por favor introduce un nombre.');
+            if (!title) return alert('Pon un título');
 
-            state.tasks.push({
-                id: Date.now(),
-                title: title,
-                time: time,
-                interval: interval,
-                completed: false
-            });
-
-            closeModal('modal-task');
-            document.getElementById('task-title').value = '';
-            saveState();
+            state.items.push({ id: Date.now(), type, title, time, date, interval, completed: false });
+            closeModal();
+            save();
         }
 
-        function saveReward() {
-            const title = document.getElementById('reward-title').value.trim();
-            const cost = parseInt(document.getElementById('reward-cost').value);
-
-            if (!title || isNaN(cost)) return alert('Completa los campos.');
-
-            state.rewards.push({ id: Date.now(), title, cost });
-            closeModal('modal-reward');
-            document.getElementById('reward-title').value = '';
-            saveState();
-        }
-
-        function claimReward(id) {
-            const reward = state.rewards.find(r => r.id === id);
-            if (reward && state.xp >= reward.cost) {
-                state.xp -= reward.cost;
-                alert(`🎉 ¡Felicidades! Has canjeado: ${reward.title}`);
-                saveState();
-            } else {
-                alert('No tienes suficiente XP acumulada.');
-            }
-        }
-
-        // Render UI
         function render() {
-            // Stats
-            document.getElementById('streak-count').innerText = state.streak;
-            document.getElementById('xp-count').innerText = state.xp;
-            document.getElementById('stat-streak').innerText = `${state.streak} días`;
-            document.getElementById('stat-completed-total').innerText = state.totalCompleted;
-            
-            const level = Math.floor(state.xp / 100) + 1;
-            document.getElementById('stat-level').innerText = `Nivel ${level}`;
+            document.getElementById('streak').innerText = state.streak;
+            document.getElementById('xp').innerText = Math.max(0, state.xp);
 
-            const doneCount = state.tasks.filter(t => t.completed).length;
-            const pct = state.tasks.length ? Math.round((doneCount / state.tasks.length) * 100) : 0;
-            document.getElementById('today-percentage').innerText = `${pct}% Completado`;
+            const habitsBox = document.getElementById('habits-list');
+            const singleBox = document.getElementById('single-list');
+            habitsBox.innerHTML = ''; singleBox.innerHTML = '';
 
-            // Tasks List
-            const tasksList = document.getElementById('tasks-list');
-            tasksList.innerHTML = '';
-            if (state.tasks.length === 0) {
-                tasksList.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:30px;">No tienes hábitos creados. ¡Añade uno!</div>`;
-            } else {
-                state.tasks.forEach(t => {
-                    const card = document.createElement('div');
-                    card.className = `task-card ${t.completed ? 'completed' : ''}`;
-                    card.innerHTML = `
-                        <div class="task-info">
-                            <div class="task-title">${t.title}</div>
-                            <div class="task-meta">
-                                <span class="time-tag">⏰ ${t.time}</span>
-                                <span>${t.interval > 0 ? '🔄 Cada ' + t.interval + ' min' : 'Puntual'}</span>
-                            </div>
-                        </div>
-                        <button class="checkbox-btn" onclick="toggleTask(${t.id})">✓</button>
-                    `;
-                    tasksList.appendChild(card);
-                });
-            }
-
-            // Rewards List
-            const rewardsList = document.getElementById('rewards-list');
-            rewardsList.innerHTML = '';
-            state.rewards.forEach(r => {
+            state.items.forEach(i => {
                 const card = document.createElement('div');
-                card.className = 'reward-card';
+                card.className = `task-card ${i.completed ? 'completed' : ''}`;
                 card.innerHTML = `
                     <div>
-                        <div style="font-weight:600;">${r.title}</div>
-                        <div class="reward-cost">⚡ ${r.cost} XP</div>
+                        <div class="task-title">${i.title}</div>
+                        <div class="task-meta">
+                            <span class="tag">⏰ ${i.time}</span>
+                            ${i.type === 'single' ? `<span class="tag tag-date">📅 ${i.date}</span>` : ''}
+                        </div>
                     </div>
-                    <button class="btn-add" style="background:${state.xp >= r.cost ? 'var(--accent)' : 'var(--card-border)'}" onclick="claimReward(${r.id})">Canjear</button>
+                    <button class="checkbox-btn" onclick="toggleCheck(${i.id})">✓</button>
                 `;
-                rewardsList.appendChild(card);
+
+                if (i.type === 'habit') habitsBox.appendChild(card);
+                else singleBox.appendChild(card);
             });
         }
 
-        // Initial render
         render();
     </script>
 </body>
