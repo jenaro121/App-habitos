@@ -7,6 +7,22 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
+
+    <!-- SDK Oficial de OneSignal -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "18eed79f-f719-4151-97e3-66625d1c74ec",
+          safari_web_id: "web.onesignal.auto.18eed79f-f719-4151-97e3-66625d1c74ec",
+          notifyButton: {
+            enable: false,
+          },
+        });
+      });
+    </script>
+
     <style>
         :root {
             --bg-color: #0f172a;
@@ -96,8 +112,8 @@
 
     <div class="container">
         <div id="notif-btn" class="notif-box">
-            <span>Permitir notificaciones de iOS</span>
-            <button onclick="enableNotifications()" style="background:#4f46e5; border:none; color:white; padding:6px 10px; border-radius:6px;">Activar</button>
+            <span>Activar Avisos Push en iPhone</span>
+            <button onclick="requestPushPermission()" style="background:#4f46e5; border:none; color:white; padding:6px 10px; border-radius:6px; cursor:pointer;">Activar</button>
         </div>
 
         <h2>
@@ -148,7 +164,7 @@
     <script>
         const todayStr = new Date().toISOString().split('T')[0];
 
-        let state = JSON.parse(localStorage.getItem('habit_app_v3')) || {
+        let state = JSON.parse(localStorage.getItem('habit_app_v4')) || {
             items: [
                 { id: 1, type: 'habit', title: 'Lavarse los dientes (Comida)', time: '14:30', date: '', completed: false },
                 { id: 2, type: 'single', title: 'Matrícula Universidad', time: '10:00', date: '2026-08-15', completed: false }
@@ -158,15 +174,19 @@
             xp: 0
         };
 
-        // Comprobación de cambio de día para reseteo automático
+        function requestPushPermission() {
+            window.OneSignalDeferred.push(function(OneSignal) {
+                OneSignal.Notifications.requestPermission().then(() => {
+                    document.getElementById('notif-btn').style.display = 'none';
+                });
+            });
+        }
+
         function checkDailyReset() {
             const currentToday = new Date().toISOString().split('T')[0];
             if (state.lastDate !== currentToday) {
-                // Es un nuevo día: resetear ticks solo de los hábitos
                 state.items.forEach(item => {
-                    if (item.type === 'habit') {
-                        item.completed = false;
-                    }
+                    if (item.type === 'habit') item.completed = false;
                 });
                 state.lastDate = currentToday;
                 save();
@@ -174,7 +194,7 @@
         }
 
         function save() {
-            localStorage.setItem('habit_app_v3', JSON.stringify(state));
+            localStorage.setItem('habit_app_v4', JSON.stringify(state));
             render();
         }
 
@@ -185,41 +205,6 @@
 
         function openModal() { document.getElementById('modal-task').classList.add('active'); }
         function closeModal() { document.getElementById('modal-task').classList.remove('active'); }
-
-        function enableNotifications() {
-            if ('Notification' in window) {
-                Notification.requestPermission().then(perm => {
-                    if (perm === 'granted') {
-                        document.getElementById('notif-btn').style.display = 'none';
-                        new Notification("✅ Notificaciones activadas en tu iPhone");
-                    }
-                });
-            }
-        }
-
-        // Bucle de comprobación de horas
-        setInterval(() => {
-            checkDailyReset();
-            const now = new Date();
-            const curTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            const curDate = now.toISOString().split('T')[0];
-
-            state.items.forEach(item => {
-                if (!item.completed) {
-                    if (item.type === 'habit' && item.time === curTime) {
-                        triggerNotif(item.title);
-                    } else if (item.type === 'single' && item.date === curDate && item.time === curTime) {
-                        triggerNotif(item.title);
-                    }
-                }
-            });
-        }, 15000);
-
-        function triggerNotif(title) {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification("⏰ Recordatorio", { body: title });
-            }
-        }
 
         function toggleCheck(id) {
             const item = state.items.find(i => i.id === id);
@@ -288,16 +273,5 @@
         checkDailyReset();
         render();
     </script>
-<script>
-  // Registro del Service Worker para iOS
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker registrado con éxito:', reg))
-        .catch(err => console.log('Error al registrar Service Worker:', err));
-    });
-  }
-</script>
-    
 </body>
 </html>
